@@ -5,8 +5,9 @@ import { useLogContext } from "@/context/LogContext"
 import { useSemaphoreContext } from "@/context/SemaphoreContext"
 import IconRefreshLine from "@/icons/IconRefreshLine"
 import { Box, Button, Divider, Heading, HStack, Link, Text, useBoolean, VStack } from "@chakra-ui/react"
-import { generateProof, Group } from "@semaphore-protocol/core"
-import { encodeBytes32String, ethers } from "ethers"
+import { Group } from "@semaphore-protocol/core"
+import { generateProof } from "@modori-labs/proof"
+import { encodeBytes32String, ethers, hexlify } from "ethers"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo } from "react"
 import Feedback from "../../../contract-artifacts/Feedback.json"
@@ -44,15 +45,20 @@ export default function ProofsPage() {
 
                 const message = encodeBytes32String(feedback)
 
-                const { points, merkleTreeDepth, merkleTreeRoot, nullifier } = await generateProof(
+                // Contract only support depth 1, 4, 8, 12, 16, 20, 24, 28, 32
+                const depth = group.depth <= 1 ? 1 : (Math.floor((group.depth - 1) / 4) + 1) * 4
+
+                const { proof, merkleTreeDepth, merkleTreeRoot, nullifier } = await generateProof(
                     _identity,
                     group,
                     message,
-                    process.env.NEXT_PUBLIC_GROUP_ID as string
+                    process.env.NEXT_PUBLIC_GROUP_ID as string,
+                    depth
                 )
 
                 let feedbackSent: boolean = false
-                const params = [merkleTreeDepth, merkleTreeRoot, nullifier, message, points]
+                const params = [merkleTreeDepth, merkleTreeRoot, nullifier, message, hexlify(proof)]
+                console.log(params)
                 if (process.env.NEXT_PUBLIC_OPENZEPPELIN_AUTOTASK_WEBHOOK) {
                     const response = await fetch(process.env.NEXT_PUBLIC_OPENZEPPELIN_AUTOTASK_WEBHOOK, {
                         method: "POST",
@@ -97,8 +103,8 @@ export default function ProofsPage() {
                             feedback: message,
                             merkleTreeDepth,
                             merkleTreeRoot,
-                            nullifier,
-                            points
+                            nullifier: nullifier,
+                            proof: hexlify(proof)
                         })
                     })
 

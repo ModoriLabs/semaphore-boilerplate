@@ -29,9 +29,9 @@ export const SemaphoreContextProvider: React.FC<ProviderProps> = ({ children }) 
     const [_feedback, setFeedback] = useState<string[]>([])
 
     const refreshUsers = useCallback(async (): Promise<void> => {
-        const semaphore = new SemaphoreEthers(ethereumNetwork, {
+        const semaphore = new SemaphoreEthers(process.env.NEXT_PUBLIC_JSON_RPC, {
             address: process.env.NEXT_PUBLIC_SEMAPHORE_CONTRACT_ADDRESS,
-            projectId: process.env.NEXT_PUBLIC_INFURA_API_KEY
+            startBlock: 7871067
         })
 
         const members = await semaphore.getGroupMembers(process.env.NEXT_PUBLIC_GROUP_ID as string)
@@ -47,9 +47,9 @@ export const SemaphoreContextProvider: React.FC<ProviderProps> = ({ children }) 
     )
 
     const refreshFeedback = useCallback(async (): Promise<void> => {
-        const semaphore = new SemaphoreEthers(ethereumNetwork, {
+        const semaphore = new SemaphoreEthers(process.env.NEXT_PUBLIC_JSON_RPC, {
             address: process.env.NEXT_PUBLIC_SEMAPHORE_CONTRACT_ADDRESS,
-            projectId: process.env.NEXT_PUBLIC_INFURA_API_KEY
+            startBlock: 7871067
         })
 
         const proofs = await semaphore.getGroupValidatedProofs(process.env.NEXT_PUBLIC_GROUP_ID as string)
